@@ -6,6 +6,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -82,6 +84,11 @@ public class WeatherActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
         setContentView(R.layout.activity_weather);
         //初始化各种控件
         swipeRefresh = findViewById(R.id.swipe_refresh);
@@ -266,11 +273,15 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
         //关闭刷新
-        swipeRefresh.setRefreshing(false);
+//        swipeRefresh.setRefreshing(false);
 
         if(nowWeather != null && forecastWeather != null && lifeStyleWeather != null) {
             Weather weather = new Weather(nowWeather, forecastWeather, lifeStyleWeather);
             showWeatherinfo(weather);
+            //关闭刷新
+            swipeRefresh.setRefreshing(false);
+        } else {
+            requestWeather(weatherId);
         }
         //获取必应图片
         loadBingPic();
