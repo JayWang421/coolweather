@@ -265,14 +265,14 @@ public class WeatherActivity extends AppCompatActivity {
                 });
             }
         });
-
+        //关闭刷新
         swipeRefresh.setRefreshing(false);
 
         if(nowWeather != null && forecastWeather != null && lifeStyleWeather != null) {
             Weather weather = new Weather(nowWeather, forecastWeather, lifeStyleWeather);
             showWeatherinfo(weather);
         }
-
+        //获取必应图片
         loadBingPic();
 
     }
