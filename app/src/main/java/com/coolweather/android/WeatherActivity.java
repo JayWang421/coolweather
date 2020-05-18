@@ -5,11 +5,14 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,12 +24,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.ListPreloader;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.ForecastWeather;
 import com.coolweather.android.gson.LifeStyle;
 import com.coolweather.android.gson.LifeStyleWeather;
 import com.coolweather.android.gson.NowWeather;
 import com.coolweather.android.gson.Weather;
+import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.Utility;
 
@@ -160,15 +165,17 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final String bingPic = response.body().string();
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
-                editor.putString("bing_pic",bingPic);
-                editor.apply();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
-                    }
-                });
+                if(!TextUtils.isEmpty(bingPic)) {
+                    SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                    editor.putString("bing_pic", bingPic);
+                    editor.apply();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                        }
+                    });
+                }
             }
 
             @Override
@@ -274,7 +281,9 @@ public class WeatherActivity extends AppCompatActivity {
         //关闭刷新
 //        swipeRefresh.setRefreshing(false);
 
-        if(nowWeather != null && forecastWeather != null && lifeStyleWeather != null) {
+        if(nowWeather != null && "ok".equals(nowWeather.status)
+                && forecastWeather != null && "ok".equals(forecastWeather.status)
+                && lifeStyleWeather != null && "ok".equals(lifeStyleWeather.status)) {
             Weather weather = new Weather(nowWeather, forecastWeather, lifeStyleWeather);
             showWeatherinfo(weather);
             //关闭刷新
@@ -294,47 +303,57 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     private void showWeatherinfo(Weather weather) {
-        //当前显示的城市Id，下拉刷新时可用到
-        this.weatherId = weather.nowWeather.basic.weatherId;
-        String cityName = weather.basic.cityName;
-        String updateTime = weather.update.updateTime.split(" ")[1];
-        String degree = weather.nowWeather.now.temperature + "℃";
-        String weatherInfo = weather.nowWeather.now.info;
-        titleCity.setText(cityName);
-        titleUpdateTime.setText(updateTime);
-        degreeText.setText(degree);
-        weatherInfoText.setText(weatherInfo);
-        forecastLayout.removeAllViews();
-        for (Forecast forecast : weather.forecastWeather.forecastList) {
-            View view = LayoutInflater.from(this).inflate(R.layout.forecast_item,forecastLayout,false);
-            TextView dataText = view.findViewById(R.id.date_text);
-            TextView infoText = view.findViewById(R.id.info_text);
-            TextView maxText = view.findViewById(R.id.max_text);
-            TextView minText = view.findViewById(R.id.min_text);
-            dataText.setText(forecast.date);
-            infoText.setText(forecast.info);
-            maxText.setText(forecast.max);
-            minText.setText(forecast.min);
-            forecastLayout.addView(view);
-        }
-        windDirText.setText(weather.nowWeather.now.windDir);
-        windScText.setText(weather.nowWeather.now.windSc);
-        humText.setText(weather.nowWeather.now.hum);
-        String comfort = "舒适度：";
-        String carWash = "洗车指数：";
-        String sport = "运动建议：";
-        for (LifeStyle lifeStyle : weather.lifeStyleWeather.lifeStyleList) {
-            if("comf".equals(lifeStyle.type)) {
-                comfort += lifeStyle.txt;
-                comfortText.setText(comfort);
-            } else if("cw".equals(lifeStyle.type)) {
-                carWash += lifeStyle.txt;
-                carWashText.setText(carWash);
-            } else if("sport".equals(lifeStyle.type)) {
-                sport += lifeStyle.txt;
-                sportText.setText(sport);
+        if(weather.nowWeather != null && weather.forecastWeather != null && weather.lifeStyleWeather != null) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            Log.d(TAG, "showWeatherinfo: 天气数据展示 - city:" + weather.nowWeather.basic.cityName + "；updateTime:" + weather.update.updateTime);
+            //当前显示的城市Id，下拉刷新时可用到
+            this.weatherId = weather.nowWeather.basic.weatherId;
+            String cityName = weather.basic.cityName;
+            String updateTime = weather.update.updateTime.split(" ")[1];
+            String degree = weather.nowWeather.now.temperature + "℃";
+            String weatherInfo = weather.nowWeather.now.info;
+            titleCity.setText(cityName);
+            titleUpdateTime.setText(updateTime);
+            degreeText.setText(degree);
+            weatherInfoText.setText(weatherInfo);
+            forecastLayout.removeAllViews();
+            for (Forecast forecast : weather.forecastWeather.forecastList) {
+                View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
+                TextView dataText = view.findViewById(R.id.date_text);
+                TextView infoText = view.findViewById(R.id.info_text);
+                TextView maxText = view.findViewById(R.id.max_text);
+                TextView minText = view.findViewById(R.id.min_text);
+                dataText.setText(forecast.date);
+                infoText.setText(forecast.info);
+                maxText.setText(forecast.max);
+                minText.setText(forecast.min);
+                forecastLayout.addView(view);
             }
+            windDirText.setText(weather.nowWeather.now.windDir);
+            windScText.setText(weather.nowWeather.now.windSc);
+            humText.setText(weather.nowWeather.now.hum);
+            String comfort = "舒适度：";
+            String carWash = "洗车指数：";
+            String sport = "运动建议：";
+            for (LifeStyle lifeStyle : weather.lifeStyleWeather.lifeStyleList) {
+                if ("comf".equals(lifeStyle.type)) {
+                    comfort += lifeStyle.txt;
+                    comfortText.setText(comfort);
+                } else if ("cw".equals(lifeStyle.type)) {
+                    carWash += lifeStyle.txt;
+                    carWashText.setText(carWash);
+                } else if ("sport".equals(lifeStyle.type)) {
+                    sport += lifeStyle.txt;
+                    sportText.setText(sport);
+                }
+            }
+            weatherLayout.setVisibility(View.VISIBLE);
+
+            //开启后天自动更新天气及每日一图服务
+            Intent intent = new Intent(this, AutoUpdateService.class);
+            startService(intent);
+        } else {
+            Toast.makeText(this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
         }
-        weatherLayout.setVisibility(View.VISIBLE);
     }
 }
