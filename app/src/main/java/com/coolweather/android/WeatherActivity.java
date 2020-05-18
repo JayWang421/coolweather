@@ -191,9 +191,9 @@ public class WeatherActivity extends AppCompatActivity {
      * @param weatherId
      */
     public void requestWeather(String weatherId) {
-        String nowWeatherUrl = "https://free-api.heweather.net/s6/weather/now?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
-        String forecastWeatherUrl = "https://free-api.heweather.net/s6/weather/forecast?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
-        String lifeStyleWeatherUrl = "https://free-api.heweather.net/s6/weather/lifestyle?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
+        String nowWeatherUrl = "https://free-api.heweather.net/s6/weather/now?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
+        String forecastWeatherUrl = "https://free-api.heweather.net/s6/weather/forecast?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
+        String lifeStyleWeatherUrl = "https://free-api.heweather.net/s6/weather/lifestyle?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
 
         //查询当天接口数据
         HttpUtil.sendOkHttpRequest(nowWeatherUrl, new Callback() {
@@ -278,14 +278,13 @@ public class WeatherActivity extends AppCompatActivity {
                 });
             }
         });
-        //关闭刷新
-//        swipeRefresh.setRefreshing(false);
 
         if(nowWeather != null && "ok".equals(nowWeather.status)
                 && forecastWeather != null && "ok".equals(forecastWeather.status)
                 && lifeStyleWeather != null && "ok".equals(lifeStyleWeather.status)) {
             Weather weather = new Weather(nowWeather, forecastWeather, lifeStyleWeather);
             showWeatherinfo(weather);
+            HttpUtil.setRequestNum();
             //关闭刷新
             swipeRefresh.setRefreshing(false);
         } else {
@@ -294,6 +293,12 @@ public class WeatherActivity extends AppCompatActivity {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+            if(HttpUtil.getRequestNum() > 15) {
+                Toast.makeText(WeatherActivity.this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
+                HttpUtil.setRequestNum();
+                swipeRefresh.setRefreshing(false);
+                return;
             }
             requestWeather(weatherId);
         }
@@ -305,7 +310,8 @@ public class WeatherActivity extends AppCompatActivity {
     private void showWeatherinfo(Weather weather) {
         if(weather.nowWeather != null && weather.forecastWeather != null && weather.lifeStyleWeather != null) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            Log.d(TAG, "showWeatherinfo: 天气数据展示 - city:" + weather.nowWeather.basic.cityName + "；updateTime:" + weather.update.updateTime);
+            Log.d(TAG, "showWeatherinfo: 天气数据展示 - city:" + weather.nowWeather.basic.cityName +
+                    "；updateTime:" + weather.update.updateTime);
             //当前显示的城市Id，下拉刷新时可用到
             this.weatherId = weather.nowWeather.basic.weatherId;
             String cityName = weather.basic.cityName;

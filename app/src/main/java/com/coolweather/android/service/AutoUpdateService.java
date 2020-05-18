@@ -12,6 +12,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.LongDef;
+
 import com.bumptech.glide.Glide;
 import com.coolweather.android.WeatherActivity;
 import com.coolweather.android.gson.ForecastWeather;
@@ -51,10 +53,13 @@ public class AutoUpdateService extends Service {
         lifeStyleWeather = null;
         updateWeather();
         updateBingPic();
-        Log.d(TAG, "onStartCommand: 后台服务更新，nowWeather:cityName:" + nowWeather.basic.cityName + "；updateTime:" + nowWeather.update.updateTime);
+        if(nowWeather.basic != null && nowWeather.update != null) {
+            Log.d(TAG, "onStartCommand: 后台服务更新，nowWeather:cityName:" + nowWeather.basic.cityName +
+                    "；updateTime:" + nowWeather.update.updateTime);
+        }
         AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
         int anHour = 8 * 60 * 60 * 1000;//8小时的毫秒数
-        long triggerAtTime = SystemClock.elapsedRealtime() + 60 * 1000;
+        long triggerAtTime = SystemClock.elapsedRealtime() + anHour;
         Intent intent1 = new Intent(this, AutoUpdateService.class);
         PendingIntent pi = PendingIntent.getService(this, 0, intent1, 0);
         manager.cancel(pi);
@@ -74,9 +79,9 @@ public class AutoUpdateService extends Service {
                     Utility.handleForcecastWeatherResponse(forecastWeatherString),
                     Utility.handleLifeStyleWeatherResponse(lifeStyleWeatherString));
             String weatherId = weather.nowWeather.basic.weatherId;
-            String nowWeatherUrl = "https://free-api.heweather.net/s6/weather/now?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
-            String forecastWeatherUrl = "https://free-api.heweather.net/s6/weather/forecast?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
-            String lifeStyleWeatherUrl = "https://free-api.heweather.net/s6/weather/lifestyle?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
+            String nowWeatherUrl = "https://free-api.heweather.net/s6/weather/now?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
+            String forecastWeatherUrl = "https://free-api.heweather.net/s6/weather/forecast?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
+            String lifeStyleWeatherUrl = "https://free-api.heweather.net/s6/weather/lifestyle?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
 
             //查询当天接口数据
             HttpUtil.sendOkHttpRequest(nowWeatherUrl, new Callback() {
@@ -131,18 +136,22 @@ public class AutoUpdateService extends Service {
                     e.printStackTrace();
                 }
             });
-        }
-
-        //更新失败后重新更新
-        if(nowWeather == null || !"ok".equals(nowWeather.status) ||
-                forecastWeather == null || !"ok".equals(forecastWeather.status) ||
-                lifeStyleWeather == null || !"ok".equals(lifeStyleWeather.status)) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            //更新失败后重新更新
+            if(nowWeather == null || !"ok".equals(nowWeather.status) ||
+                    forecastWeather == null || !"ok".equals(forecastWeather.status) ||
+                    lifeStyleWeather == null || !"ok".equals(lifeStyleWeather.status)) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(HttpUtil.getRequestNum() >15) {
+                    HttpUtil.setRequestNum();
+                    return;
+                }
+                updateWeather();
             }
-            updateWeather();
+            HttpUtil.setRequestNum();
         }
     }
 
