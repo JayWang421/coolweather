@@ -72,14 +72,17 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView sportText;
 
-    private NowWeather nowWeather ;
+    public NowWeather nowWeather ;
 
-    private ForecastWeather forecastWeather;
+    public ForecastWeather forecastWeather;
 
-    private LifeStyleWeather lifeStyleWeather;
+    public LifeStyleWeather lifeStyleWeather;
 
     //必应背景图
     private ImageView bingPicImg;
+
+    //当前天气页面的城市Id
+    private String weatherId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +115,7 @@ public class WeatherActivity extends AppCompatActivity {
         String nowWeatherString = prefs.getString("nowWeather",null);
         String forecastWeatherString = prefs.getString("forecastWeather",null);
         String lifeStyleWeatherString = prefs.getString("lifeStyleWeather",null);
-        final String weatherId;
+
         if(nowWeatherString != null && forecastWeatherString != null && lifeStyleWeatherString != null) {
             //有缓存时直接解析天气数据
             Weather weather = new Weather(Utility.handleNowWeatherResponse(nowWeatherString),
@@ -181,7 +184,6 @@ public class WeatherActivity extends AppCompatActivity {
      * @param weatherId
      */
     public void requestWeather(String weatherId) {
-
         String nowWeatherUrl = "https://free-api.heweather.net/s6/weather/now?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
         String forecastWeatherUrl = "https://free-api.heweather.net/s6/weather/forecast?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
         String lifeStyleWeatherUrl = "https://free-api.heweather.net/s6/weather/lifestyle?location=" + weatherId + "&key=c41075c0e3e4481ea10ebead32107f13";
@@ -191,7 +193,6 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final String responseText = response.body().string();
-                Log.d(TAG, "nowWeatheronResponse: " + responseText);
                 nowWeather = Utility.handleNowWeatherResponse(responseText);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -220,7 +221,6 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final String responseText = response.body().string();
-                Log.d(TAG, "forecastWeatheronResponse: " + responseText);
                 forecastWeather = Utility.handleForcecastWeatherResponse(responseText);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -249,7 +249,6 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 final String responseText = response.body().string();
-                Log.d(TAG, "lifeStyleWeatheronResponse: " + responseText);
                 lifeStyleWeather = Utility.handleLifeStyleWeatherResponse(responseText);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -281,6 +280,12 @@ public class WeatherActivity extends AppCompatActivity {
             //关闭刷新
             swipeRefresh.setRefreshing(false);
         } else {
+            //数据不全后，每0.5秒请求一次
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             requestWeather(weatherId);
         }
         //获取必应图片
@@ -289,6 +294,8 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     private void showWeatherinfo(Weather weather) {
+        //当前显示的城市Id，下拉刷新时可用到
+        this.weatherId = weather.nowWeather.basic.weatherId;
         String cityName = weather.basic.cityName;
         String updateTime = weather.update.updateTime.split(" ")[1];
         String degree = weather.nowWeather.now.temperature + "℃";

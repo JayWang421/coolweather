@@ -37,6 +37,8 @@ import okhttp3.Response;
 
 public class ChooseAreaFragment extends Fragment {
 
+    private static final String TAG = "ChooseAreaFragment";
+
     public static final int LEVEL_PROVINCE = 0;
 
     public static final int LEVEL_CITY = 1;
@@ -114,13 +116,15 @@ public class ChooseAreaFragment extends Fragment {
                     if(getActivity() instanceof MainActivity) {
                         Intent intent = new Intent(getActivity(), WeatherActivity.class);
                         intent.putExtra("weather_id", weatherId);
-                        Log.d("ChooseAreaFragment", "weatherId: " + weatherId);
                         startActivity(intent);
                         getActivity().finish();
                     } else if(getActivity() instanceof WeatherActivity) {
                         WeatherActivity activity = (WeatherActivity) getActivity();
                         activity.drawerLayout.closeDrawers();
                         activity.swipeRefresh.setRefreshing(true);
+                        activity.nowWeather = null;
+                        activity.forecastWeather = null;
+                        activity.lifeStyleWeather = null;
                         activity.requestWeather(weatherId);
                     }
                 }
