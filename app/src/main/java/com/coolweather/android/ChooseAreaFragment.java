@@ -37,6 +37,8 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+import static android.app.Activity.RESULT_OK;
+
 public class ChooseAreaFragment extends Fragment {
 
     private static final String TAG = "ChooseAreaFragment";
@@ -52,6 +54,8 @@ public class ChooseAreaFragment extends Fragment {
     private TextView titleText;
 
     private Button backButton;
+
+    private Button settingButton;
 
     private ListView listView;
 
@@ -95,6 +99,10 @@ public class ChooseAreaFragment extends Fragment {
         View view = inflater.inflate(R.layout.choose_area,container,false);
         titleText = view.findViewById(R.id.title_text);
         backButton = view.findViewById(R.id.back_button);
+        settingButton = view.findViewById(R.id.setting_button);
+        if(getActivity() instanceof MainActivity) {
+            settingButton.setVisibility(View.GONE);
+        }
         listView = view.findViewById(R.id.list_view);
         adapter = new ArrayAdapter<>(getContext(),android.R.layout.simple_list_item_1,dataList);
         listView.setAdapter(adapter);
@@ -143,6 +151,14 @@ public class ChooseAreaFragment extends Fragment {
             }
         });
         queryProvinces();
+
+        settingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), SettingActivity.class);
+                startActivityForResult(intent,1);
+            }
+        });
     }
 
     /**
@@ -253,7 +269,6 @@ public class ChooseAreaFragment extends Fragment {
                     }
                 });
             }
-
         });
     }
 

@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Binder;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -21,6 +22,8 @@ import com.coolweather.android.gson.LifeStyleWeather;
 import com.coolweather.android.gson.NowWeather;
 import com.coolweather.android.gson.Weather;
 import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.LogUtil;
+import com.coolweather.android.util.MyApplication;
 import com.coolweather.android.util.Utility;
 
 import org.jetbrains.annotations.NotNull;
@@ -57,11 +60,13 @@ public class AutoUpdateService extends Service {
             Log.d(TAG, "onStartCommand: 后台服务更新，nowWeather:cityName:" + nowWeather.basic.cityName +
                     "；updateTime:" + nowWeather.update.updateTime);
         }
-        AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        int anHour = 8 * 60 * 60 * 1000;//8小时的毫秒数
-        long triggerAtTime = SystemClock.elapsedRealtime() + anHour;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int choosePeriod = prefs.getInt("servicePeriod",0);
+        LogUtil.d(TAG,"服务启动，选择的周期为：" + choosePeriod);
+        long triggerAtTime = SystemClock.elapsedRealtime() + choosePeriod;
         Intent intent1 = new Intent(this, AutoUpdateService.class);
         PendingIntent pi = PendingIntent.getService(this, 0, intent1, 0);
+        AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
         manager.cancel(pi);
         manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
         return super.onStartCommand(intent, flags, startId);
@@ -176,5 +181,10 @@ public class AutoUpdateService extends Service {
                 e.printStackTrace();
             }
         });
+    }
+
+    @Override
+    public void onDestroy() {
+        LogUtil.d(TAG,"服务销毁");
     }
 }

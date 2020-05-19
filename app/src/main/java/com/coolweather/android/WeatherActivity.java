@@ -365,9 +365,7 @@ public class WeatherActivity extends AppCompatActivity {
             }
             weatherLayout.setVisibility(View.VISIBLE);
 
-            //开启后天自动更新天气及每日一图服务
-            Intent intent = new Intent(this, AutoUpdateService.class);
-            startService(intent);
+
         } else {
             Toast.makeText(this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
         }
