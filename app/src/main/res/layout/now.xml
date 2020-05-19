@@ -1,25 +1,47 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- 天气页面当天天气布局 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?><!-- 天气页面当天天气布局 -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:layout_margin="15dp">
 
-    <TextView
-        android:id="@+id/degree_text"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:textSize="60sp"
-        android:textColor="#fff" />
+        android:layout_toLeftOf="@+id/tianqi">
 
-    <TextView
-        android:id="@+id/weather_info_text"
+        <ImageView
+            android:id="@+id/weather_icon"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:background="#FFF" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tianqi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:textColor="#fff"
-        android:textSize="20sp" />
+        android:layout_alignParentRight="true"
+        android:orientation="vertical">
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/degree_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#fff"
+            android:textSize="60sp" />
+
+        <TextView
+            android:id="@+id/weather_info_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:textColor="#fff"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+</RelativeLayout>
+
+
+

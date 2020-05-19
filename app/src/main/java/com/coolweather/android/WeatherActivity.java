@@ -64,6 +64,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView weatherInfoText;
 
+    private ImageView weatherIcon;
+
     private LinearLayout forecastLayout;
 
     private TextView windDirText;
@@ -107,6 +109,7 @@ public class WeatherActivity extends AppCompatActivity {
         titleUpdateTime = findViewById(R.id.title_update_time);
         degreeText = findViewById(R.id.degree_text);
         weatherInfoText = findViewById(R.id.weather_info_text);
+        weatherIcon = findViewById(R.id.weather_icon);
         forecastLayout = findViewById(R.id.forecast_layout);
         windDirText =findViewById(R.id.wind_dir_text);
         windScText = findViewById(R.id.wind_sc_text);
@@ -328,10 +331,16 @@ public class WeatherActivity extends AppCompatActivity {
             String updateTime = weather.update.updateTime.split(" ")[1];
             String degree = weather.nowWeather.now.temperature + "℃";
             String weatherInfo = weather.nowWeather.now.info;
+            String weatherCode = weather.nowWeather.now.code;
             titleCity.setText(cityName);
             titleUpdateTime.setText(updateTime);
             degreeText.setText(degree);
             weatherInfoText.setText(weatherInfo);
+            int resId = getResources().getIdentifier("code_" + weatherCode,"drawable",this.getPackageName());
+            if(resId == 0) {
+                resId = getResources().getIdentifier("code_999","drawable",this.getPackageName());
+            }
+            weatherIcon.setImageDrawable(getResources().getDrawable(resId));
             forecastLayout.removeAllViews();
             for (Forecast forecast : weather.forecastWeather.forecastList) {
                 View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);

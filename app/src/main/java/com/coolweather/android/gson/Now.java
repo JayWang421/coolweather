@@ -4,6 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class Now {
 
+    @SerializedName("cond_code")
+    public String code;
+
     @SerializedName("cond_txt")
     public String info;
 
