@@ -33,6 +33,7 @@ import com.coolweather.android.gson.NowWeather;
 import com.coolweather.android.gson.Weather;
 import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.LogUtil;
 import com.coolweather.android.util.Utility;
 
 import org.jetbrains.annotations.NotNull;
@@ -159,6 +160,9 @@ public class WeatherActivity extends AppCompatActivity {
 
     //加载必应每日一图
     private void loadBingPic() {
+        if(!HttpUtil.isNetworkAvailable()) {
+            return;
+        }
         String requestBingPic = "http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
 
@@ -191,6 +195,12 @@ public class WeatherActivity extends AppCompatActivity {
      * @param weatherId
      */
     public void requestWeather(String weatherId) {
+        if(!HttpUtil.isNetworkAvailable()) {
+            Toast.makeText(WeatherActivity.this,"网络不可用",Toast.LENGTH_LONG).show();
+            //关闭刷新
+            swipeRefresh.setRefreshing(false);
+            return;
+        }
         String nowWeatherUrl = "https://free-api.heweather.net/s6/weather/now?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
         String forecastWeatherUrl = "https://free-api.heweather.net/s6/weather/forecast?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;
         String lifeStyleWeatherUrl = "https://free-api.heweather.net/s6/weather/lifestyle?location=" + weatherId + "&key=" + HttpUtil.HEFENG_KEY;

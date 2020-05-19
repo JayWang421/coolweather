@@ -53,7 +53,7 @@ public class AutoUpdateService extends Service {
         lifeStyleWeather = null;
         updateWeather();
         updateBingPic();
-        if(nowWeather.basic != null && nowWeather.update != null) {
+        if(nowWeather != null && nowWeather.basic != null && nowWeather.update != null) {
             Log.d(TAG, "onStartCommand: 后台服务更新，nowWeather:cityName:" + nowWeather.basic.cityName +
                     "；updateTime:" + nowWeather.update.updateTime);
         }
@@ -68,6 +68,9 @@ public class AutoUpdateService extends Service {
     }
 
     private void updateWeather() {
+        if(!HttpUtil.isNetworkAvailable()) {
+            return;
+        }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String nowWeatherString = prefs.getString("nowWeather",null);
         String forecastWeatherString = prefs.getString("forecastWeather",null);

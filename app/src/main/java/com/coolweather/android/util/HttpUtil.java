@@ -1,5 +1,10 @@
 package com.coolweather.android.util;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.widget.Toast;
+
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,6 +33,17 @@ public class HttpUtil {
 
     public static void setRequestNum(){
         requestNum = 0;
+    }
+
+    //网络是否可用
+    public static boolean isNetworkAvailable() {
+        ConnectivityManager manager = (ConnectivityManager) MyApplication.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+        if(networkInfo != null && networkInfo.isAvailable()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
